@@ -1,41 +1,41 @@
 node ('master') {
-    def approved = false;
-    def config = [ 'smartphone' : 'smartphone.template' ]
-    stage ('Get approve for sending email') {
-        if (params.NEED_APPROVE) {
-            emailext    body: generateLinkHTML(),
-                        recipientProviders: [
-                                [$class: 'DevelopersRecipientProvider'],
-                                [$class: 'RequesterRecipientProvider']
-                        ],
-                        subject: "EID INaaS Approve Equipment Link | EID",
-                        to: params.ADMIN_EMAIL
+    ws('Emails/Pipeline.Send.Email/') {
+        def approved = false;
+        def config = [ 'smartphone' : 'smartphone.template' ]
+        stage ('Get approve for sending email') {
+            if (params.NEED_APPROVE) {
+                emailext    body: generateLinkHTML(),
+                            recipientProviders: [
+                                    [$class: 'DevelopersRecipientProvider'],
+                                    [$class: 'RequesterRecipientProvider']
+                            ],
+                            subject: "EID INaaS Approve Equipment Link | EID",
+                            to: params.ADMIN_EMAIL
 
-            approved = input id:'approved', message: "Approve equipment ${params.EQUIPMENT_NAME} to ${params.MEMBER_NAME} <${params.MEMBER_EMAIL}>?",
-                            parameters: [[$class      : 'BooleanParameterDefinition',
-                                            defaultValue: true,
-                                            description : "Approve equipment ${params.EQUIPMENT_NAME} to ${params.MEMBER_NAME} <${params.MEMBER_EMAIL}>?, - Yes / No",
-                                            name        : 'Equipment need approve']]
+                approved = input id:'approved', message: "Approve equipment ${params.EQUIPMENT_NAME} to ${params.MEMBER_NAME} <${params.MEMBER_EMAIL}>?",
+                                parameters: [[$class      : 'BooleanParameterDefinition',
+                                                defaultValue: true,
+                                                description : "Approve equipment ${params.EQUIPMENT_NAME} to ${params.MEMBER_NAME} <${params.MEMBER_EMAIL}>?, - Yes / No",
+                                                name        : 'Equipment need approve']]
+            }
         }
-    }
 
-    stage ('Send details to the provider') {
-        if ((!params.NEED_APPROVE) || (approved)) {
-            def body = generateDetailsHTML();
-            def name = params.EQUIPMENT_NAME.toLowerCase();
-            print(name);
-            if ( config.containsKey(name) ) {
-                print("Tests")
-                body = '''${SCRIPT, template="smartphone.template"}'''
-            } 
-            print("Test2")
-            emailext    body: body,
-                        recipientProviders: [
-                                [$class: 'DevelopersRecipientProvider'],
-                                [$class: 'RequesterRecipientProvider']
-                        ],
-                        subject: "EID INaaS Equipment Request for ${params.MEMBER_NAME} | EID",
-                        to: params.PROVIDER_EMAIL
+        stage ('Send details to the provider') {
+            if ((!params.NEED_APPROVE) || (approved)) {
+                def body = generateDetailsHTML();
+                def name = params.EQUIPMENT_NAME.toLowerCase();
+                print(name);
+                if ( config.containsKey(name) ) {
+                    body = '''${SCRIPT, template="smartphone.template"}'''
+                } 
+                emailext    body: body,
+                            recipientProviders: [
+                                    [$class: 'DevelopersRecipientProvider'],
+                                    [$class: 'RequesterRecipientProvider']
+                            ],
+                            subject: "EID INaaS Equipment Request for ${params.MEMBER_NAME} | EID",
+                            to: params.PROVIDER_EMAIL
+            }
         }
     }
 }
