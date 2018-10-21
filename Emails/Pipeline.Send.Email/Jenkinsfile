@@ -1,0 +1,53 @@
+node ('master') {
+    def approved = false;
+    def config = [ smartphone : 'smartphone.template' ]
+    stage ('Get approve for sending email') {
+        if (params.NEED_APPROVE) {
+            emailext    body: generateLinkHTML(),
+                        recipientProviders: [
+                                [$class: 'DevelopersRecipientProvider'],
+                                [$class: 'RequesterRecipientProvider']
+                        ],
+                        subject: "EID INaaS Approve Equipment Link | EID",
+                        to: params.ADMIN_EMAIL
+
+            approved = input id:'approved', message: "Approve equipment ${params.EQUIPMENT_NAME} to ${params.MEMBER_NAME} <${params.MEMBER_EMAIL}>?",
+                            parameters: [[$class      : 'BooleanParameterDefinition',
+                                            defaultValue: true,
+                                            description : "Approve equipment ${params.EQUIPMENT_NAME} to ${params.MEMBER_NAME} <${params.MEMBER_EMAIL}>?, - Yes / No",
+                                            name        : 'Equipment need approve']]
+        }
+    }
+
+    stage ('Send details to the provider') {
+        if ((!params.NEED_APPROVE) || (approved)) {
+            def body = generateDetailsHTML();
+            if ( config.containsKey(params.EQUIPMENT_NAME.toLowerCase()) ) {
+                body = """${SCRIPT, template="smartphone.template"}"""
+            } 
+            emailext    body: body,
+                        recipientProviders: [
+                                [$class: 'DevelopersRecipientProvider'],
+                                [$class: 'RequesterRecipientProvider']
+                        ],
+                        subject: "EID INaaS Equipment Request for ${params.MEMBER_NAME} | EID",
+                        to: params.PROVIDER_EMAIL
+        }
+    }
+}
+
+def generateLinkHTML(){
+    def html = "<h1>Link to jenkins here</h1><a href=\"${env.BUILD_URL}input\">link to jenkins</a><img src=\"http://www.mercyhurst.edu/sites/default/files/news/2017-11-03%2015%3A32/web.png\"/>"
+    return html
+}
+
+def generateDetailsHTML(){
+    def html = """
+        <h1>Equipment for ${params.MEMBER_NAME}</h1>
+        <p>Equipment: ${params.EQUIPMENT_NAME}</p>
+        <p>customer email: ${params.MEMBER_EMAIL}</p>
+        <p>EID Admin Email: ${params.ADMIN_EMAIL}</p>
+        <img src=\"http://www.mercyhurst.edu/sites/default/files/news/2017-11-03%2015%3A32/web.png\"/>
+    """
+    return html
+}
