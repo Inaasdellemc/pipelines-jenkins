@@ -23,7 +23,7 @@ node ('master') {
         if ((!params.NEED_APPROVE) || (approved)) {
             def body = generateDetailsHTML();
             def name = params.EQUIPMENT_NAME.toLowerCase();
-            console.log(name);
+            print(name);
             if ( config.containsKey(name) ) {
                 print("Tests")
                 body = '''${SCRIPT, template="smartphone.template"}'''
