@@ -1,6 +1,6 @@
 node ('master') {
     def approved = false;
-    def config = [ smartphone : 'smartphone.template' ]
+    def config = [ 'smartphone' : 'smartphone.template' ]
     stage ('Get approve for sending email') {
         if (params.NEED_APPROVE) {
             emailext    body: generateLinkHTML(),
@@ -22,9 +22,13 @@ node ('master') {
     stage ('Send details to the provider') {
         if ((!params.NEED_APPROVE) || (approved)) {
             def body = generateDetailsHTML();
-            if ( config.containsKey(params.EQUIPMENT_NAME.toLowerCase()) ) {
+            def name = params.EQUIPMENT_NAME.toLowerCase();
+            console.log(name);
+            if ( config.containsKey(name) ) {
+                print("Tests")
                 body = '''${SCRIPT, template="smartphone.template"}'''
             } 
+            print("Test2")
             emailext    body: body,
                         recipientProviders: [
                                 [$class: 'DevelopersRecipientProvider'],
