@@ -23,7 +23,7 @@ node ('master') {
         if ((!params.NEED_APPROVE) || (approved)) {
             def body = generateDetailsHTML();
             if ( config.containsKey(params.EQUIPMENT_NAME.toLowerCase()) ) {
-                body = """${SCRIPT, template="smartphone.template"}"""
+                body = '''${SCRIPT, template="smartphone.template"}'''
             } 
             emailext    body: body,
                         recipientProviders: [
